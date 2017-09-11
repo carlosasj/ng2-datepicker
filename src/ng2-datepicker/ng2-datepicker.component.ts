@@ -1,13 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  Inject,
-  OnInit,
-  forwardRef,
-  Input,
-  Output,
-  EventEmitter,
-} from '@angular/core';
+import { Component, ElementRef, EventEmitter, forwardRef, Inject, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 import { SlimScrollOptions } from 'ng2-slimscroll';
 import * as moment from 'moment';
@@ -104,7 +95,15 @@ export const CALENDAR_VALUE_ACCESSOR: any = {
   providers: [CALENDAR_VALUE_ACCESSOR],
 })
 export class DatePickerComponent implements ControlValueAccessor, OnInit {
-  @Input() options: IDatePickerOptions;
+  private _options: IDatePickerOptions;
+  @Input('options')
+  set options(value: IDatePickerOptions) {
+    this._options = value;
+    this.update('updateOptions');
+  }
+  get options() {
+      return this._options;
+  }
   @Input() inputEvents: EventEmitter<{ type: string, data: string | DateModel }>;
   @Output() outputEvents: EventEmitter<{ type: string, data: string | DateModel }>;
 
@@ -116,14 +115,16 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   years: number[];
   yearPicker: boolean;
   scrollOptions: SlimScrollOptions;
-  nameOfweekday(index: number): string{
-    let locale = (this.options && this.options.locale)? this.options.locale : "en";
-    let additinal = (this.options && this.options.firstWeekdaySunday)?6:0;
-    return moment("2013W06" + ( (index + additinal) % 7 + 1 ) ).lang(locale).format("dd");
-  }
 
   minDate: moment.Moment | any;
   maxDate: moment.Moment | any;
+
+  nameOfweekday(index: number): string {
+    let locale = (this._options && this._options.locale) ? this._options.locale : 'en';
+    let additinal = (this._options && this._options.firstWeekdaySunday) ? 6 : 0;
+    return moment('2013W06' + ( (index + additinal) % 7 + 1 ) ).lang(locale).format('dd');
+  }
+
 
   private onTouchedCallback: () => void = () => { };
   private onChangeCallback: (_: any) => void = () => { };
@@ -131,7 +132,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   constructor( @Inject(ElementRef) public el: ElementRef) {
     this.opened = false;
     this.currentDate = Moment();
-    this.options = this.options || {};
+    this._options = this._options || {};
     this.days = [];
     this.years = [];
     this.date = new DateModel({
@@ -172,44 +173,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   }
 
   ngOnInit() {
-    this.options = new DatePickerOptions(this.options);
-    this.scrollOptions = {
-      barBackground: '#C9C9C9',
-      barWidth: '7',
-      gridBackground: '#C9C9C9',
-      gridWidth: '2'
-    };
-
-    if (this.options.initialDate instanceof Date) {
-      this.currentDate = Moment(this.options.initialDate);
-      this.selectDate(null, this.currentDate);
-    }
-
-    if (this.options.minDate instanceof Date) {
-      this.minDate = Moment(this.options.minDate);
-    } else {
-      this.minDate = null;
-    }
-
-    if (this.options.maxDate instanceof Date) {
-      this.maxDate = Moment(this.options.maxDate);
-    } else {
-      this.maxDate = null;
-    }
-
-    this.generateYears();
-    this.generateCalendar();
-    this.outputEvents.emit({ type: 'default', data: 'init' });
-
-    if (typeof window !== 'undefined') {
-      const body = document.querySelector('body');
-      body.addEventListener('click', e => {
-        if (!this.opened || !e.target) { return; };
-        if (this.el.nativeElement !== e.target && !this.el.nativeElement.contains((<any>e.target))) {
-          this.close();
-        }
-      }, false);
-    }
+    this.update('init');
 
     if (this.inputEvents) {
       this.inputEvents.subscribe((e: any) => {
@@ -237,11 +201,52 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
             day: date.format('DD'),
             month: date.format('MM'),
             year: date.format('YYYY'),
-            formatted: date.lang(this.options.locale).format(this.options.format),
+            formatted: date.lang(this._options.locale).format(this._options.format),
             momentObj: date
           };
         }
       });
+    }
+  }
+
+  private update(eventName) {
+    this._options = new DatePickerOptions(this._options ? this._options : {});
+    this.scrollOptions = {
+      barBackground: '#C9C9C9',
+      barWidth: '7',
+      gridBackground: '#C9C9C9',
+      gridWidth: '2'
+    };
+
+    if (this._options.initialDate instanceof Date) {
+      this.currentDate = Moment(this._options.initialDate);
+      this.selectDate(null, this.currentDate);
+    }
+
+    if (this._options.minDate instanceof Date) {
+      this.minDate = Moment(this._options.minDate);
+    } else {
+      this.minDate = null;
+    }
+
+    if (this._options.maxDate instanceof Date) {
+      this.maxDate = Moment(this._options.maxDate);
+    } else {
+      this.maxDate = null;
+    }
+
+    this.generateYears();
+    this.generateCalendar();
+    this.outputEvents.emit({ type: 'default', data: eventName });
+
+    if (typeof window !== 'undefined') {
+      const body = document.querySelector('body');
+      body.addEventListener('click', e => {
+        if (!this.opened || !e.target) { return; };
+        if (this.el.nativeElement !== e.target && !this.el.nativeElement.contains((<any>e.target))) {
+          this.close();
+        }
+      }, false);
     }
   }
 
@@ -250,7 +255,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
     const month = date.month();
     const year = date.year();
     let n = 1;
-    const firstWeekDay = (this.options.firstWeekdaySunday) ? date.date(2).day() : date.date(1).day();
+    const firstWeekDay = (this._options.firstWeekdaySunday) ? date.date(2).day() : date.date(1).day();
 
     if (firstWeekDay !== 1) {
       n -= (firstWeekDay + 6) % 7;
@@ -264,15 +269,15 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
       const selected: boolean = (selectedDate && selectedDate.isSame(currentDate, 'day'));
       let betweenMinMax = true;
 
-      if (this.minDate !== null) {
-        if (this.maxDate !== null) {
-          betweenMinMax = currentDate.isBetween(this.minDate, this.maxDate, 'day', '[]');
+      if (this._options.minDate !== null) {
+        if (this._options.maxDate !== null) {
+          betweenMinMax = currentDate.isBetween(this._options.minDate, this._options.maxDate, 'day', '[]');
         } else {
-          betweenMinMax = !currentDate.isBefore(this.minDate, 'day');
+          betweenMinMax = !currentDate.isBefore(this._options.minDate, 'day');
         }
       } else {
-        if (this.maxDate !== null) {
-          betweenMinMax = !currentDate.isAfter(this.maxDate, 'day');
+        if (this._options.maxDate !== null) {
+          betweenMinMax = !currentDate.isAfter(this._options.maxDate, 'day');
         }
       }
 
@@ -288,7 +293,6 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
 
       this.days.push(day);
     }
-    console.log('this.days', this.days);
   }
 
   selectDate(e: MouseEvent, date: moment.Moment) {
@@ -299,7 +303,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
         day: date.format('DD'),
         month: date.format('MM'),
         year: date.format('YYYY'),
-        formatted: date.lang(this.options.locale).format(this.options.format),
+        formatted: date.lang(this._options.locale).format(this._options.format),
         momentObj: date
       };
       this.generateCalendar();
@@ -319,7 +323,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
         day: date.format('DD'),
         month: date.format('MM'),
         year: date.format('YYYY'),
-        formatted: date.lang(this.options.locale).format(this.options.format),
+        formatted: date.lang(this._options.locale).format(this._options.format),
         momentObj: date
       };
       this.yearPicker = false;
@@ -328,9 +332,11 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   }
 
   generateYears() {
-    const date: moment.Moment = this.minDate || Moment().year(Moment().year() - 40);
-    const toDate: moment.Moment = this.maxDate || Moment().year(Moment().year() + 40);
-    const years = toDate.year() - date.year();
+    const exists = (val) => typeof val !== 'undefined' && val !== null;
+    this.years = [];
+    const date: moment.Moment = exists(this._options.minDate) ? Moment(this._options.minDate) : Moment().year(Moment().year() - 40);
+    const toDate: moment.Moment = exists(this._options.maxDate) ? Moment(this._options.maxDate) : Moment().year(Moment().year() + 40);
+    const years = toDate.year() - date.year() + 1;
 
     for (let i = 0; i < years; i++) {
       this.years.push(date.year());
