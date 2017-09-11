@@ -66,7 +66,7 @@ export class DatePickerOptions {
   clearText?: string;
 
   constructor(obj?: IDatePickerOptions) {
-    this.autoApply = (obj && obj.autoApply === true) ? true : false;
+    this.autoApply = (obj && obj.autoApply === true);
     this.style = obj && obj.style ? obj.style : 'normal';
     this.locale = obj && obj.locale ? obj.locale : 'en';
     this.minDate = obj && obj.minDate ? obj.minDate : null;
@@ -260,19 +260,19 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
     const selectedDate: moment.Moment = this.date.momentObj;
     for (let i = n; i <= date.endOf('month').date(); i += 1) {
       const currentDate: moment.Moment = Moment(`${i}.${month + 1}.${year}`, 'DD.MM.YYYY');
-      const today: boolean = (Moment().isSame(currentDate, 'day') && Moment().isSame(currentDate, 'month')) ? true : false;
-      const selected: boolean = (selectedDate && selectedDate.isSame(currentDate, 'day')) ? true : false;
+      const today: boolean = (Moment().isSame(currentDate, 'day') && Moment().isSame(currentDate, 'month'));
+      const selected: boolean = (selectedDate && selectedDate.isSame(currentDate, 'day'));
       let betweenMinMax = true;
 
       if (this.minDate !== null) {
         if (this.maxDate !== null) {
-          betweenMinMax = currentDate.isBetween(this.minDate, this.maxDate, 'day', '[]') ? true : false;
+          betweenMinMax = currentDate.isBetween(this.minDate, this.maxDate, 'day', '[]');
         } else {
-          betweenMinMax = currentDate.isBefore(this.minDate, 'day') ? false : true;
+          betweenMinMax = !currentDate.isBefore(this.minDate, 'day');
         }
       } else {
         if (this.maxDate !== null) {
-          betweenMinMax = currentDate.isAfter(this.maxDate, 'day') ? false : true;
+          betweenMinMax = !currentDate.isAfter(this.maxDate, 'day');
         }
       }
 
@@ -281,13 +281,14 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
         month: i > 0 ? month : null,
         year: i > 0 ? year : null,
         enabled: i > 0 ? betweenMinMax : false,
-        today: i > 0 && today ? true : false,
-        selected: i > 0 && selected ? true : false,
+        today: i > 0 && today,
+        selected: i > 0 && selected,
         momentObj: currentDate
       };
 
       this.days.push(day);
     }
+    console.log('this.days', this.days);
   }
 
   selectDate(e: MouseEvent, date: moment.Moment) {
