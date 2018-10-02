@@ -122,7 +122,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
   nameOfweekday(index: number): string {
     let locale = (this._options && this._options.locale) ? this._options.locale : 'en';
     let additinal = (this._options && this._options.firstWeekdaySunday) ? 6 : 0;
-    return moment('2013W06' + ( (index + additinal) % 7 + 1 ) ).lang(locale).format('dd');
+    return moment('2013W06' + ((index + additinal) % 7 + 1)).localeData(locale).format('dd');
   }
 
 
@@ -201,7 +201,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
             day: date.format('DD'),
             month: date.format('MM'),
             year: date.format('YYYY'),
-            formatted: date.lang(this._options.locale).format(this._options.format),
+            formatted: date.localeData(this._options.locale).format(this._options.format),
             momentObj: date
           };
         }
@@ -303,7 +303,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
         day: date.format('DD'),
         month: date.format('MM'),
         year: date.format('YYYY'),
-        formatted: date.lang(this._options.locale).format(this._options.format),
+        formatted: date.localeData(this._options.locale).format(this._options.format),
         momentObj: date
       };
       this.generateCalendar();
@@ -323,7 +323,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnInit {
         day: date.format('DD'),
         month: date.format('MM'),
         year: date.format('YYYY'),
-        formatted: date.lang(this._options.locale).format(this._options.format),
+        formatted: date.localeData(this._options.locale).format(this._options.format),
         momentObj: date
       };
       this.yearPicker = false;
